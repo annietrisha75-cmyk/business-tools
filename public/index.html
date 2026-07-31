@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>All-in-One Automated Platform & Control Hub</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col justify-between">
+
+  <!-- Header -->
+  <header class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold tracking-wider text-emerald-400">UNIFIED ECOSYSTEM HUB</h1>
+    <span class="text-xs bg-emerald-900 text-emerald-300 px-2.5 py-1 rounded-full font-medium">Autopilot Active</span>
+  </header>
+
+  <!-- Monetization Ad Slot Header -->
+  <div class="max-w-6xl mx-auto w-full px-6 pt-4">
+    <div class="bg-gray-900 border border-gray-800 p-3 rounded text-center text-xs text-gray-500">
+      [ Ad Network Monetization Banner Slot ]
+    </div>
+  </div>
+
+  <!-- Main Grid Layout for Tools -->
+  <main class="max-w-6xl mx-auto p-6 flex-1 w-full grid grid-cols-1 md:grid-cols-3 gap-6">
+    
+    <!-- Tool 1: Lead Capture Module -->
+    <div class="bg-gray-900 p-5 rounded-xl border border-gray-800 shadow-xl flex flex-col justify-between">
+      <div>
+        <h2 class="text-base font-semibold mb-3 text-indigo-400">1. Lead Capture Engine</h2>
+        <form id="leadForm" class="space-y-2.5">
+          <input type="text" id="pageId" placeholder="Campaign / Page ID" required class="w-full p-2 bg-gray-800 rounded border border-gray-700 text-sm">
+          <input type="text" id="visitorName" placeholder="Visitor Name" required class="w-full p-2 bg-gray-800 rounded border border-gray-700 text-sm">
+          <input type="text" id="visitorContact" placeholder="Contact Info" required class="w-full p-2 bg-gray-800 rounded border border-gray-700 text-sm">
+          <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 p-2 rounded text-sm font-bold transition">Save Lead</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tool 2: Secure Digital Vault Module -->
+    <div class="bg-gray-900 p-5 rounded-xl border border-gray-800 shadow-xl flex flex-col justify-between">
+      <div>
+        <h2 class="text-base font-semibold mb-3 text-emerald-400">2. Secure Info-Product Vault</h2>
+        <form id="vaultForm" class="space-y-2.5">
+          <input type="text" id="fileName" placeholder="File / Product Name" required class="w-full p-2 bg-gray-800 rounded border border-gray-700 text-sm">
+          <input type="url" id="fileUrl" placeholder="Direct Cloud Storage URL" required class="w-full p-2 bg-gray-800 rounded border border-gray-700 text-sm">
+          <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 p-2 rounded text-sm font-bold transition">Generate Link</button>
+        </form>
+      </div>
+      <div id="vaultResult" class="mt-3 text-xs break-all text-emerald-300"></div>
+    </div>
+
+    <!-- Tool 3: Real-Time Messenger & Video Injector Console -->
+    <div class="bg-gray-900 p-5 rounded-xl border border-gray-800 shadow-xl flex flex-col justify-between">
+      <div>
+        <h2 class="text-base font-semibold mb-3 text-amber-400">3. Live Messenger & Stream</h2>
+        <div id="chat-box" class="h-32 bg-gray-950 p-2 rounded border border-gray-800 overflow-y-auto space-y-1 mb-2 text-xs"></div>
+        <input id="message-input" type="text" placeholder="Type message..." class="w-full p-2 bg-gray-800 rounded border border-gray-700 text-sm">
+      </div>
+      <video id="remoteVideo" autoplay playsinline class="mt-3 w-full h-24 bg-black rounded border border-gray-800 object-cover"></video>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 border-t border-gray-800 p-4 text-center text-xs text-gray-500">
+    Automated Maintenance Pipeline Enabled via GitHub & Render.
+  </footer>
+
+  <script>
+    const socket = io();
+
+    // Lead Form Handler
+    document.getElementById('leadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        pageId: document.getElementById('pageId').value,
+        visitorName: document.getElementById('visitorName').value,
+        visitorContact: document.getElementById('visitorContact').value
+      };
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      alert(data.message || data.error);
+    });
+
+    // Vault Form Handler
+    document.getElementById('vaultForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        fileName: document.getElementById('fileName').value,
+        fileUrl: document.getElementById('fileUrl').value
+      };
+      const res = await fetch('/api/vault/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if(data.success) {
+        document.getElementById('vaultResult').innerHTML = `Protected Link: <a href="${data.downloadLink}" target="_blank" class="underline text-emerald-400">${data.downloadLink}</a>`;
+      } else {
+        alert(data.error);
+      }
+    });
+
+    // Real-Time Messenger Socket Handler
+    const msgInput = document.getElementById('message-input');
+    msgInput.addEventListener('keypress', (e) => {
+      if(e.key === 'Enter' && msgInput.value) {
+        socket.emit('chat-message', { sender: "User", text: msgInput.value });
+        msgInput.value = '';
+      }
+    });
+
+    socket.on('chat-message', (data) => {
+      const box = document.getElementById('chat-box');
+      box.innerHTML += `<div><span class="text-amber-400">${data.sender}:</span> ${data.text}</div>`;
+      box.scrollTop = box.scrollHeight;
+    });
+  </script>
+</body>
+</html>
